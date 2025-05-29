@@ -151,8 +151,25 @@ extension OpenAIRealtimeSessionConfiguration {
     public struct InputAudioTranscription: Encodable {
         /// The model to use for transcription (e.g., "whisper-1").
         public let model: String
-        public init(model: String) {
+        /// The language of the input audio in ISO-639-1 format
+        public let language: String?
+        /// An optional text to guide the model's style
+        public let prompt: String?
+        
+        private enum CodingKeys: String, CodingKey {
+            case model
+            case language
+            case prompt
+        }
+        
+        public init(
+            model: String,
+            language: String? = nil,
+            prompt: String? = nil
+        ) {
             self.model = model
+            self.language = language
+            self.prompt = prompt
         }
     }
 }
