@@ -146,6 +146,26 @@ open class OpenAIRealtimeSession {
                let arguments = json["arguments"] as? String {
                 self.continuation?.yield(.responseFunctionCallArgumentsDone(name, arguments))
             }
+        case "response.transcript.delta":
+            if let transcript = json["delta"] as? String {
+                self.continuation?.yield(.responseTranscriptDelta(transcript))
+            }
+        case "response.transcript.done":
+            if let transcript = json["transcript"] as? String {
+                self.continuation?.yield(.responseTranscriptDone(transcript))
+            }
+        case "input_audio_buffer.transcript":
+            if let transcript = json["transcript"] as? String {
+                self.continuation?.yield(.inputAudioBufferTranscript(transcript))
+            }
+        case "input_audio_transcription.delta":
+            if let transcript = json["delta"] as? String {
+                self.continuation?.yield(.inputAudioTranscriptionDelta(transcript))
+            }
+        case "input_audio_transcription.completed":
+            if let transcript = json["transcript"] as? String {
+                self.continuation?.yield(.inputAudioTranscriptionCompleted(transcript))
+            }
         default:
             break
         }
