@@ -497,7 +497,7 @@ extension OpenAICreateResponseRequestBody {
         }
 
         /// Constrains effort on reasoning for reasoning models.
-        /// Currently supported values are low, medium, and high.
+        /// Currently supported values are minimal, low, medium, and high.
         /// Reducing reasoning effort can result in faster responses and fewer tokens used on reasoning in a response.
         public let effort: Effort?
 
@@ -520,6 +520,7 @@ extension OpenAICreateResponseRequestBody {
 extension OpenAICreateResponseRequestBody.Reasoning {
     /// Supported effort levels for reasoning models
     public enum Effort: String, Encodable {
+        case minimal
         case low
         case medium
         case high
