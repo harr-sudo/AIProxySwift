@@ -115,9 +115,8 @@ public struct OpenAIChatCompletionRequestBody: Encodable {
     public let webSearchOptions: OpenAIChatCompletionRequestBody.WebSearchOptions?
     
     /// Controls the reasoning effort for reasoning models like GPT-5.
-    /// Supported values: "minimal", "low", "medium", "high"
-    /// Defaults to "medium" if not specified
-    public let reasoning: String?
+    /// Configuration options for reasoning models.
+    public let reasoning: Reasoning?
     
     private enum CodingKeys: String, CodingKey {
         case model
@@ -175,7 +174,7 @@ public struct OpenAIChatCompletionRequestBody: Encodable {
         topP: Double? = nil,
         user: String? = nil,
         webSearchOptions: OpenAIChatCompletionRequestBody.WebSearchOptions? = nil,
-        reasoning: String? = nil
+        reasoning: OpenAIChatCompletionRequestBody.Reasoning? = nil
     ) {
         self.model = model
         self.messages = messages
@@ -696,6 +695,27 @@ extension OpenAIChatCompletionRequestBody {
             self.searchContextSize = searchContextSize
             self.userLocation = userLocation
         }
+    }
+}
+
+// MARK: - Reasoning
+extension OpenAIChatCompletionRequestBody {
+    /// Configuration options for reasoning models like GPT-5
+    public struct Reasoning: Encodable {
+        /// Constrains effort on reasoning for reasoning models.
+        /// Supported values: minimal, low, medium, high
+        /// Reducing reasoning effort can result in faster responses and fewer tokens used on reasoning in a response.
+        public let effort: String
+        
+        public init(effort: String) {
+            self.effort = effort
+        }
+        
+        /// Convenience initializers for common effort levels
+        public static let minimal = Reasoning(effort: "minimal")
+        public static let low = Reasoning(effort: "low") 
+        public static let medium = Reasoning(effort: "medium")
+        public static let high = Reasoning(effort: "high")
     }
 }
 
