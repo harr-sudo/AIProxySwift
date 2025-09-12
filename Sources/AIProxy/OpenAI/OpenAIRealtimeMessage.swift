@@ -13,9 +13,31 @@ public enum OpenAIRealtimeMessage {
     case responseAudioDelta(String) // "response.audio.delta"
     case inputAudioBufferSpeechStarted // "input_audio_buffer.speech_started"
     case responseFunctionCallArgumentsDone(String, String) // "response.function_call_arguments.done"
-    case responseTranscriptDelta(String) // "response.transcript.delta"
-    case responseTranscriptDone(String) // "response.transcript.done"
+    
+    // FIXED: Corrected event names to match OpenAI API
+    case responseTranscriptDelta(String) // "response.audio_transcript.delta"
+    case responseTranscriptDone(String) // "response.audio_transcript.done"
     case inputAudioBufferTranscript(String) // "input_audio_buffer.transcript"
-    case inputAudioTranscriptionDelta(String) // "input_audio_transcription.delta"
-    case inputAudioTranscriptionCompleted(String) // "input_audio_transcription.completed"
+    case inputAudioTranscriptionDelta(String) // "conversation.item.input_audio_transcription.delta"
+    case inputAudioTranscriptionCompleted(String) // "conversation.item.input_audio_transcription.completed"
+    
+    // HIGH PRIORITY: Essential speech detection and completion events
+    case inputAudioBufferSpeechStopped // "input_audio_buffer.speech_stopped"
+    case inputAudioBufferCommitted // "input_audio_buffer.committed"
+    case responseAudioDone // "response.audio.done"
+    case responseDone // "response.done"
+    
+    // MEDIUM PRIORITY: Conversation management events
+    case conversationItemCreated // "conversation.item.created"
+    case responseOutputItemAdded // "response.output_item.added"
+    case responseOutputItemDone // "response.output_item.done"
+    case responseContentPartAdded // "response.content_part.added"
+    case responseContentPartDone // "response.content_part.done"
+    
+    // MEDIUM PRIORITY: Failure handling events
+    case conversationItemInputAudioTranscriptionFailed(String?) // "conversation.item.input_audio_transcription.failed"
+    case responseAudioTranscriptFailed(String?) // "response.audio_transcript.failed"
+    
+    // LOW PRIORITY: System monitoring
+    case rateLimitsUpdated // "rate_limits.updated"
 }

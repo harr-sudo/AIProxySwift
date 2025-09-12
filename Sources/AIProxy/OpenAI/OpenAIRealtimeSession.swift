@@ -146,11 +146,12 @@ open class OpenAIRealtimeSession {
                let arguments = json["arguments"] as? String {
                 self.continuation?.yield(.responseFunctionCallArgumentsDone(name, arguments))
             }
-        case "response.transcript.delta":
+        // FIXED: Corrected event names to match OpenAI API
+        case "response.audio_transcript.delta":
             if let transcript = json["delta"] as? String {
                 self.continuation?.yield(.responseTranscriptDelta(transcript))
             }
-        case "response.transcript.done":
+        case "response.audio_transcript.done":
             if let transcript = json["transcript"] as? String {
                 self.continuation?.yield(.responseTranscriptDone(transcript))
             }
@@ -158,14 +159,48 @@ open class OpenAIRealtimeSession {
             if let transcript = json["transcript"] as? String {
                 self.continuation?.yield(.inputAudioBufferTranscript(transcript))
             }
-        case "input_audio_transcription.delta":
+        case "conversation.item.input_audio_transcription.delta":
             if let transcript = json["delta"] as? String {
                 self.continuation?.yield(.inputAudioTranscriptionDelta(transcript))
             }
-        case "input_audio_transcription.completed":
+        case "conversation.item.input_audio_transcription.completed":
             if let transcript = json["transcript"] as? String {
                 self.continuation?.yield(.inputAudioTranscriptionCompleted(transcript))
             }
+        
+        // HIGH PRIORITY: Essential speech detection and completion events
+        case "input_audio_buffer.speech_stopped":
+            self.continuation?.yield(.inputAudioBufferSpeechStopped)
+        case "input_audio_buffer.committed":
+            self.continuation?.yield(.inputAudioBufferCommitted)
+        case "response.audio.done":
+            self.continuation?.yield(.responseAudioDone)
+        case "response.done":
+            self.continuation?.yield(.responseDone)
+        
+        // MEDIUM PRIORITY: Conversation management events
+        case "conversation.item.created":
+            self.continuation?.yield(.conversationItemCreated)
+        case "response.output_item.added":
+            self.continuation?.yield(.responseOutputItemAdded)
+        case "response.output_item.done":
+            self.continuation?.yield(.responseOutputItemDone)
+        case "response.content_part.added":
+            self.continuation?.yield(.responseContentPartAdded)
+        case "response.content_part.done":
+            self.continuation?.yield(.responseContentPartDone)
+        
+        // MEDIUM PRIORITY: Failure handling events
+        case "conversation.item.input_audio_transcription.failed":
+            let errorMessage = json["error"] as? String
+            self.continuation?.yield(.conversationItemInputAudioTranscriptionFailed(errorMessage))
+        case "response.audio_transcript.failed":
+            let errorMessage = json["error"] as? String
+            self.continuation?.yield(.responseAudioTranscriptFailed(errorMessage))
+        
+        // LOW PRIORITY: System monitoring
+        case "rate_limits.updated":
+            self.continuation?.yield(.rateLimitsUpdated)
         default:
             break
         }
