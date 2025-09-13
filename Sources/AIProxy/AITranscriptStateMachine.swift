@@ -115,6 +115,17 @@ final class AITranscriptStateMachine {
         cleanup()
     }
     
+    /// Start a new AI response turn (preserves conversation but creates new message)
+    func startNewTurn() {
+        debugLog("🆕 Starting new AI response turn")
+        cancelDebounce()
+        workingBuffer = ""
+        currentRevision = 0
+        lastRenderedRevision = -1
+        isFinalized = false
+        messageId = nil // This will force creation of a new message ID
+    }
+    
     /// Reset state for new conversation
     func reset() {
         debugLog("🔄 Resetting AI transcript state machine")
