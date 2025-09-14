@@ -21,6 +21,10 @@ public enum OpenAIRealtimeMessage {
     case inputAudioTranscriptionDelta(String) // "conversation.item.input_audio_transcription.delta"
     case inputAudioTranscriptionCompleted(String) // "conversation.item.input_audio_transcription.completed"
     
+    // TRANSCRIPT EVENTS: Text output events for text-only responses
+    case responseTextDelta(String) // "response.output_text.delta"
+    case responseTextDone(String) // "response.output_text.done"
+    
     // HIGH PRIORITY: Essential speech detection and completion events
     case inputAudioBufferSpeechStopped // "input_audio_buffer.speech_stopped"
     case inputAudioBufferCommitted // "input_audio_buffer.committed"

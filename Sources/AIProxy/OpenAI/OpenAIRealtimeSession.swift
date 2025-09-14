@@ -168,6 +168,16 @@ open class OpenAIRealtimeSession {
                 self.continuation?.yield(.inputAudioTranscriptionCompleted(transcript))
             }
         
+        // TRANSCRIPT EVENTS: Text output events for text-only responses
+        case "response.output_text.delta":
+            if let textDelta = json["delta"] as? String {
+                self.continuation?.yield(.responseTextDelta(textDelta))
+            }
+        case "response.output_text.done":
+            if let textFinal = json["text"] as? String {
+                self.continuation?.yield(.responseTextDone(textFinal))
+            }
+        
         // HIGH PRIORITY: Essential speech detection and completion events
         case "input_audio_buffer.speech_stopped":
             self.continuation?.yield(.inputAudioBufferSpeechStopped)
@@ -202,6 +212,7 @@ open class OpenAIRealtimeSession {
         case "rate_limits.updated":
             self.continuation?.yield(.rateLimitsUpdated)
         default:
+            logIf(.debug)?.debug("⚠️ Unhandled OpenAI event type: \(messageType)")
             break
         }
 
