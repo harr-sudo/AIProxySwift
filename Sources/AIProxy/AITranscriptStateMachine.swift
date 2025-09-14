@@ -9,7 +9,7 @@
 import Foundation
 
 /// State machine for managing AI transcript updates with revision safety and Arabic support
-final class AITranscriptStateMachine {
+public final class AITranscriptStateMachine {
     
     // MARK: - State Properties
     private var workingBuffer: String = ""
@@ -30,7 +30,7 @@ final class AITranscriptStateMachine {
     private let onAnomalyDetected: (String) -> Void
     
     // MARK: - Initialization
-    init(
+    public init(
         onRenderIntermediate: @escaping (UUID, String, Int) -> Void,
         onRenderFinal: @escaping (UUID, String, Int) -> Void,
         onAnomalyDetected: @escaping (String) -> Void
@@ -43,7 +43,7 @@ final class AITranscriptStateMachine {
     // MARK: - Public Interface
     
     /// Handle transcript delta with snapshot semantics and revision safety
-    func handleTranscriptDelta(_ delta: String, eventIndex: Int? = nil) {
+    public func handleTranscriptDelta(_ delta: String, eventIndex: Int? = nil) {
         let revision = eventIndex ?? (currentRevision + 1)
         
         debugLog("📝 AI Delta: '\(delta.prefix(30))...' (rev: \(revision), last: \(lastRenderedRevision))")
@@ -74,7 +74,7 @@ final class AITranscriptStateMachine {
     }
     
     /// Handle final transcript - authoritative source
-    func handleTranscriptDone(_ finalText: String, eventIndex: Int? = nil) {
+    public func handleTranscriptDone(_ finalText: String, eventIndex: Int? = nil) {
         let revision = eventIndex ?? (currentRevision + 1)
         
         debugLog("🏁 AI Final: '\(finalText.prefix(30))...' (rev: \(revision))")
@@ -98,7 +98,7 @@ final class AITranscriptStateMachine {
     }
     
     /// Handle response.done as fallback finalization
-    func handleResponseDone(eventIndex: Int? = nil) {
+    public func handleResponseDone(eventIndex: Int? = nil) {
         debugLog("🔚 Response done (finalized: \(isFinalized))")
         
         if !isFinalized {
@@ -116,7 +116,7 @@ final class AITranscriptStateMachine {
     }
     
     /// Start a new AI response turn (preserves conversation but creates new message)
-    func startNewTurn() {
+    public func startNewTurn() {
         debugLog("🆕 Starting new AI response turn")
         cancelDebounce()
         workingBuffer = ""
@@ -127,7 +127,7 @@ final class AITranscriptStateMachine {
     }
     
     /// Reset state for new conversation
-    func reset() {
+    public func reset() {
         debugLog("🔄 Resetting AI transcript state machine")
         cancelDebounce()
         workingBuffer = ""
