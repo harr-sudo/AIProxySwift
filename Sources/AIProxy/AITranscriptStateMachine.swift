@@ -126,6 +126,27 @@ public final class AITranscriptStateMachine {
         messageId = nil // This will force creation of a new message ID
     }
     
+    /// Handle interruption (user started speaking while AI was responding)
+    public func handleInterruption() {
+        debugLog("⚠️ AI response interrupted by user")
+        
+        // Cancel any pending renders
+        cancelDebounce()
+        
+        // If we have partial content, finalize it as interrupted
+        if let id = messageId, !workingBuffer.isEmpty {
+            debugLog("📝 Finalizing interrupted AI response: '\(workingBuffer.prefix(30))...'")
+            onRenderFinal(id, workingBuffer + " [interrupted]", currentRevision)
+        }
+        
+        // Reset state for next response
+        workingBuffer = ""
+        currentRevision = 0
+        lastRenderedRevision = -1
+        isFinalized = true
+        messageId = nil
+    }
+    
     /// Reset state for new conversation
     public func reset() {
         debugLog("🔄 Resetting AI transcript state machine")
