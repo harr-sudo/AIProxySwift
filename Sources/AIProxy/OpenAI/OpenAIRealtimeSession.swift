@@ -191,6 +191,8 @@ open class OpenAIRealtimeSession {
         // MEDIUM PRIORITY: Conversation management events
         case "conversation.item.created":
             self.continuation?.yield(.conversationItemCreated)
+        case "conversation.item.truncated":
+            self.continuation?.yield(.conversationItemTruncated)
         case "response.output_item.added":
             self.continuation?.yield(.responseOutputItemAdded)
         case "response.output_item.done":
