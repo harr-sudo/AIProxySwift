@@ -35,10 +35,23 @@ public enum OpenAIRealtimeMessage {
     case conversationItemCreated(String, String) // "conversation.item.created" (itemId, role)
     case conversationItemTruncated // "conversation.item.truncated"
     case conversationInterrupted // "conversation.interrupted"
+    case conversationItemAdded(String, String, String) // "conversation.item.added" (itemId, role, status)
+    case conversationItemDone(String, String, String) // "conversation.item.done" (itemId, role, status)
     case responseOutputItemAdded // "response.output_item.added"
     case responseOutputItemDone // "response.output_item.done"
     case responseContentPartAdded // "response.content_part.added"
+    case responseContentPartAddedInfo(String?, Int?, Int?, String?) // (itemId, outputIndex, contentIndex, partType)
     case responseContentPartDone // "response.content_part.done"
+    
+    // OUTPUT AUDIO transcript events (console naming)
+    case responseOutputAudioTranscriptDelta(String) // "response.output_audio_transcript.delta"
+    case responseOutputAudioTranscriptDone(String) // "response.output_audio_transcript.done"
+    case responseOutputAudioDone // "response.output_audio.done"
+    
+    // Output audio buffer lifecycle
+    case outputAudioBufferStarted // "output_audio_buffer.started"
+    case outputAudioBufferStopped // "output_audio_buffer.stopped"
+    case outputAudioBufferCleared // "output_audio_buffer.cleared"
     
     // MEDIUM PRIORITY: Failure handling events
     case conversationItemInputAudioTranscriptionFailed(String?) // "conversation.item.input_audio_transcription.failed"

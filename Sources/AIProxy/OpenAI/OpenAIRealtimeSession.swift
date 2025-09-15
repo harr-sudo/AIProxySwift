@@ -155,6 +155,15 @@ open class OpenAIRealtimeSession {
             if let transcript = json["transcript"] as? String {
                 self.continuation?.yield(.responseTranscriptDone(transcript))
             }
+        // Console naming variants
+        case "response.output_audio_transcript.delta":
+            if let transcript = json["delta"] as? String {
+                self.continuation?.yield(.responseOutputAudioTranscriptDelta(transcript))
+            }
+        case "response.output_audio_transcript.done":
+            if let transcript = json["transcript"] as? String {
+                self.continuation?.yield(.responseOutputAudioTranscriptDone(transcript))
+            }
         case "input_audio_buffer.transcript":
             if let transcript = json["transcript"] as? String {
                 self.continuation?.yield(.inputAudioBufferTranscript(transcript))
@@ -185,6 +194,8 @@ open class OpenAIRealtimeSession {
             self.continuation?.yield(.inputAudioBufferCommitted)
         case "response.audio.done":
             self.continuation?.yield(.responseAudioDone)
+        case "response.output_audio.done":
+            self.continuation?.yield(.responseOutputAudioDone)
         case "response.done":
             self.continuation?.yield(.responseDone)
         
@@ -194,6 +205,20 @@ open class OpenAIRealtimeSession {
             let id = itemId?["id"] as? String ?? ""
             let role = itemId?["role"] as? String ?? ""
             self.continuation?.yield(.conversationItemCreated(id, role))
+        case "conversation.item.added":
+            if let item = json["item"] as? [String: Any] {
+                let id = item["id"] as? String ?? ""
+                let role = item["role"] as? String ?? ""
+                let status = item["status"] as? String ?? ""
+                self.continuation?.yield(.conversationItemAdded(id, role, status))
+            }
+        case "conversation.item.done":
+            if let item = json["item"] as? [String: Any] {
+                let id = item["id"] as? String ?? ""
+                let role = item["role"] as? String ?? ""
+                let status = item["status"] as? String ?? ""
+                self.continuation?.yield(.conversationItemDone(id, role, status))
+            }
         case "conversation.item.truncated":
             self.continuation?.yield(.conversationItemTruncated)
         case "conversation.interrupted":
@@ -203,7 +228,13 @@ open class OpenAIRealtimeSession {
         case "response.output_item.done":
             self.continuation?.yield(.responseOutputItemDone)
         case "response.content_part.added":
+            let itemId = json["item_id"] as? String
+            let outputIndex = json["output_index"] as? Int
+            let contentIndex = json["content_index"] as? Int
+            let part = json["part"] as? [String: Any]
+            let partType = part?["type"] as? String
             self.continuation?.yield(.responseContentPartAdded)
+            self.continuation?.yield(.responseContentPartAddedInfo(itemId, outputIndex, contentIndex, partType))
         case "response.content_part.done":
             self.continuation?.yield(.responseContentPartDone)
         
@@ -218,6 +249,14 @@ open class OpenAIRealtimeSession {
         // LOW PRIORITY: System monitoring
         case "rate_limits.updated":
             self.continuation?.yield(.rateLimitsUpdated)
+        
+        // Output audio buffer lifecycle
+        case "output_audio_buffer.started":
+            self.continuation?.yield(.outputAudioBufferStarted)
+        case "output_audio_buffer.stopped":
+            self.continuation?.yield(.outputAudioBufferStopped)
+        case "output_audio_buffer.cleared":
+            self.continuation?.yield(.outputAudioBufferCleared)
         default:
             logIf(.debug)?.debug("⚠️ Unhandled OpenAI event type: \(messageType)")
             break
