@@ -190,7 +190,10 @@ open class OpenAIRealtimeSession {
         
         // MEDIUM PRIORITY: Conversation management events
         case "conversation.item.created":
-            self.continuation?.yield(.conversationItemCreated)
+            let itemId = json["item"] as? [String: Any]
+            let id = itemId?["id"] as? String ?? ""
+            let role = itemId?["role"] as? String ?? ""
+            self.continuation?.yield(.conversationItemCreated(id, role))
         case "conversation.item.truncated":
             self.continuation?.yield(.conversationItemTruncated)
         case "response.output_item.added":

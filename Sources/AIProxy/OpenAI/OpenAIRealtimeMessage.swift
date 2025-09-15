@@ -32,7 +32,7 @@ public enum OpenAIRealtimeMessage {
     case responseDone // "response.done"
     
     // MEDIUM PRIORITY: Conversation management events
-    case conversationItemCreated // "conversation.item.created"
+    case conversationItemCreated(String, String) // "conversation.item.created" (itemId, role)
     case conversationItemTruncated // "conversation.item.truncated"
     case responseOutputItemAdded // "response.output_item.added"
     case responseOutputItemDone // "response.output_item.done"
