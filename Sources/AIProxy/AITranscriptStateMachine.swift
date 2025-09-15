@@ -18,6 +18,7 @@ public final class AITranscriptStateMachine {
     private var debounceTask: Task<Void, Never>?
     private var isFinalized: Bool = false
     private var messageId: UUID?
+    private var lastRenderedText: String = ""  // Track last rendered text for interruption appending
     
     // MARK: - Configuration
     private let debounceDelayNs: UInt64 = 125_000_000 // 125ms - Arabic-friendly
@@ -124,6 +125,7 @@ public final class AITranscriptStateMachine {
         lastRenderedRevision = -1
         isFinalized = false
         messageId = nil // This will force creation of a new message ID
+        lastRenderedText = ""  // Reset tracked text for new turn
     }
     
     /// Handle interruption (user started speaking while AI was responding)
@@ -134,9 +136,14 @@ public final class AITranscriptStateMachine {
         cancelDebounce()
         
         // If we have partial content, finalize it as interrupted
-        if let id = messageId, !workingBuffer.isEmpty {
-            debugLog("📝 Finalizing interrupted AI response: '\(workingBuffer.prefix(30))...'")
-            onRenderFinal(id, workingBuffer + " [interrupted]", currentRevision)
+        if let id = messageId {
+            // Use the last rendered text if available, otherwise use working buffer
+            let textToInterrupt = !lastRenderedText.isEmpty ? lastRenderedText : workingBuffer
+            
+            if !textToInterrupt.isEmpty {
+                debugLog("📝 Finalizing interrupted AI response: '\(textToInterrupt.prefix(30))...'")
+                onRenderFinal(id, textToInterrupt + " [interrupted]", currentRevision)
+            }
         }
         
         // Reset state for next response
@@ -145,6 +152,7 @@ public final class AITranscriptStateMachine {
         lastRenderedRevision = -1
         isFinalized = true
         messageId = nil
+        lastRenderedText = ""  // Reset tracked text
     }
     
     /// Reset state for new conversation
@@ -156,6 +164,7 @@ public final class AITranscriptStateMachine {
         lastRenderedRevision = -1
         isFinalized = false
         messageId = nil
+        lastRenderedText = ""  // Reset tracked text
     }
     
     // MARK: - Private Methods
@@ -243,6 +252,7 @@ public final class AITranscriptStateMachine {
         guard let id = messageId else { return }
         
         lastRenderedRevision = currentRevision
+        lastRenderedText = workingBuffer  // Track rendered text for interruption
         onRenderIntermediate(id, workingBuffer, currentRevision)
         
         debugLog("📤 Rendered intermediate: '\(workingBuffer.prefix(30))...' (rev: \(currentRevision))")
@@ -252,6 +262,7 @@ public final class AITranscriptStateMachine {
         guard let id = messageId else { return }
         
         lastRenderedRevision = currentRevision
+        lastRenderedText = workingBuffer  // Track rendered text for interruption
         onRenderFinal(id, workingBuffer, currentRevision)
         
         debugLog("🎯 Rendered final: '\(workingBuffer.prefix(30))...' (rev: \(currentRevision))")
