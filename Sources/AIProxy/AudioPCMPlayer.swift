@@ -180,9 +180,9 @@ open class AudioPCMPlayer {
         // Calculate elapsed time since playback started
         let elapsedMs = Int(Date().timeIntervalSince(startTime) * 1000)
         
-        // Return the minimum of elapsed time and cumulative buffer time
-        // This accounts for buffering ahead of actual playback
-        return min(elapsedMs, cumulativePlaybackTimeMs)
+        // Return elapsed time (actual playback position)
+        // Don't use cumulative buffer time as it represents queued audio, not played audio
+        return max(0, elapsedMs)
     }
 }
 
