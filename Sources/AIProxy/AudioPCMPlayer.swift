@@ -30,6 +30,10 @@ open class AudioPCMPlayer {
     private let audioEngine: AVAudioEngine
     private let playerNode: AVAudioPlayerNode
     private let adjustGainOniOS = true
+    
+    // Playback position tracking for truncation support
+    private var cumulativePlaybackTimeMs: Int = 0
+    private var playbackStartTime: Date?
 
     public init() throws {
         guard let _inputFormat = AVAudioFormat(
@@ -145,13 +149,40 @@ open class AudioPCMPlayer {
         }
         #endif
 
-        self.playerNode.scheduleBuffer(outPCMBuf, at: nil, options: [], completionHandler: {})
+        // Track playback timing for truncation support
+        let bufferDurationMs = Int((Double(outPCMBuf.frameLength) / self.playableFormat.sampleRate) * 1000)
+        
+        // Start timing if this is the first buffer
+        if playbackStartTime == nil {
+            playbackStartTime = Date()
+        }
+        
+        self.playerNode.scheduleBuffer(outPCMBuf, at: nil, options: [], completionHandler: { [weak self] in
+            // Update cumulative time when buffer completes
+            self?.cumulativePlaybackTimeMs += bufferDurationMs
+        })
         self.playerNode.play()
     }
 
     public func interruptPlayback() {
         logIf(.debug)?.debug("Interrupting playback")
         self.playerNode.stop()
+        // Reset playback timing when interrupted
+        playbackStartTime = nil
+        cumulativePlaybackTimeMs = 0
+    }
+    
+    /// Get the current playback position in milliseconds
+    /// This is used for conversation item truncation during barge-in scenarios
+    public var currentPlaybackPositionMs: Int {
+        guard let startTime = playbackStartTime else { return 0 }
+        
+        // Calculate elapsed time since playback started
+        let elapsedMs = Int(Date().timeIntervalSince(startTime) * 1000)
+        
+        // Return the minimum of elapsed time and cumulative buffer time
+        // This accounts for buffering ahead of actual playback
+        return min(elapsedMs, cumulativePlaybackTimeMs)
     }
 }
 
