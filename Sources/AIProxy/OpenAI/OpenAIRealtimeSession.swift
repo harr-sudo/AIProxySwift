@@ -196,6 +196,8 @@ open class OpenAIRealtimeSession {
             self.continuation?.yield(.conversationItemCreated(id, role))
         case "conversation.item.truncated":
             self.continuation?.yield(.conversationItemTruncated)
+        case "conversation.interrupted":
+            self.continuation?.yield(.conversationInterrupted)
         case "response.output_item.added":
             self.continuation?.yield(.responseOutputItemAdded)
         case "response.output_item.done":

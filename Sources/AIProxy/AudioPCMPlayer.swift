@@ -31,9 +31,9 @@ open class AudioPCMPlayer {
     private let playerNode: AVAudioPlayerNode
     private let adjustGainOniOS = true
     
-    // Playback position tracking for truncation support
-    private var cumulativePlaybackTimeMs: Int = 0
-    private var playbackStartTime: Date?
+    // Playback position tracking for truncation support (sample-accurate)
+    private var playbackStartNodeTime: AVAudioTime?
+    private var playbackStartHostTime: UInt64?
 
     public init() throws {
         guard let _inputFormat = AVAudioFormat(
@@ -149,18 +149,8 @@ open class AudioPCMPlayer {
         }
         #endif
 
-        // Track playback timing for truncation support
-        let bufferDurationMs = Int((Double(outPCMBuf.frameLength) / self.playableFormat.sampleRate) * 1000)
-        
-        // Start timing if this is the first buffer
-        if playbackStartTime == nil {
-            playbackStartTime = Date()
-        }
-        
-        self.playerNode.scheduleBuffer(outPCMBuf, at: nil, options: [], completionHandler: { [weak self] in
-            // Update cumulative time when buffer completes
-            self?.cumulativePlaybackTimeMs += bufferDurationMs
-        })
+        // Schedule the buffer and start if needed
+        self.playerNode.scheduleBuffer(outPCMBuf, at: nil, options: [], completionHandler: nil)
         self.playerNode.play()
     }
 
@@ -168,21 +158,34 @@ open class AudioPCMPlayer {
         logIf(.debug)?.debug("Interrupting playback")
         self.playerNode.stop()
         // Reset playback timing when interrupted
-        playbackStartTime = nil
-        cumulativePlaybackTimeMs = 0
+        playbackStartNodeTime = nil
+        playbackStartHostTime = nil
     }
     
-    /// Get the current playback position in milliseconds
-    /// This is used for conversation item truncation during barge-in scenarios
+    /// Mark the beginning of a new assistant audio turn.
+    /// Call this right before the first buffer for a new response is scheduled.
+    public func markAssistantTurnStart() {
+        guard let nodeTime = playerNode.lastRenderTime,
+              let playerTime = playerNode.playerTime(forNodeTime: nodeTime) else {
+            playbackStartNodeTime = nil
+            playbackStartHostTime = nil
+            return
+        }
+        playbackStartNodeTime = AVAudioTime(sampleTime: playerTime.sampleTime, atRate: playerTime.sampleRate)
+        playbackStartHostTime = nodeTime.hostTime
+    }
+
+    /// Get the current playback position in milliseconds based on rendered samples.
+    /// Falls back to 0 if timing is unavailable.
     public var currentPlaybackPositionMs: Int {
-        guard let startTime = playbackStartTime else { return 0 }
-        
-        // Calculate elapsed time since playback started
-        let elapsedMs = Int(Date().timeIntervalSince(startTime) * 1000)
-        
-        // Return elapsed time (actual playback position)
-        // Don't use cumulative buffer time as it represents queued audio, not played audio
-        return max(0, elapsedMs)
+        guard let startNodeTime = playbackStartNodeTime,
+              let lastRenderTime = playerNode.lastRenderTime,
+              let playerTime = playerNode.playerTime(forNodeTime: lastRenderTime) else {
+            return 0
+        }
+        let samplesRendered = max(0, playerTime.sampleTime - startNodeTime.sampleTime)
+        let seconds = Double(samplesRendered) / playerTime.sampleRate
+        return max(0, Int(seconds * 1000.0))
     }
 }
 
